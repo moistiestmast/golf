@@ -1,0 +1,8 @@
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore large raw & intermediate video files
+videos/full/
+videos/trimmed/
