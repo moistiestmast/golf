@@ -1,0 +1,38 @@
+{
+  "total_clips": 24,
+  "tp": 18,
+  "fp": 6,
+  "fn": 6,
+  "precision": 0.75,
+  "recall": 0.75,
+  "f1": 0.75,
+  "tiou_threshold": 0.5,
+  "total_processed_min": 10.71,
+  "fppm": 0.5602,
+  "mae_frames_all_clips": 86.92,
+  "median_error_frames_all": 5.0,
+  "mae_frames_tp_only": 5.94,
+  "median_error_frames_tp": 5.0,
+  "pct_within_5_frames": 62.5,
+  "pct_within_10_frames": 62.5,
+  "per_view": {
+    "down-the-line": {
+      "total": 10,
+      "tp": 6,
+      "recall": 0.6,
+      "mae_frames": 139.7
+    },
+    "face-on": {
+      "total": 7,
+      "tp": 7,
+      "recall": 1.0,
+      "mae_frames": 5.29
+    },
+    "other": {
+      "total": 7,
+      "tp": 5,
+      "recall": 0.7143,
+      "mae_frames": 93.14
+    }
+  }
+}
