@@ -1,0 +1,440 @@
+PS C:\Users\drhan\Desktop\golf> python clip_golf_video.py --audio
+=========================================================
+ GOLF STRIKE EXTRACTION PIPELINE
+ Stage 1: Audio Silence -> Slow-Mo Removal
+ Stage 2: Farneback Optical Flow -> Impact Detection
+ Full Videos Dir:    C:\Users\drhan\Desktop\golf\videos\full
+ Trimmed Clips Dir:  C:\Users\drhan\Desktop\golf\videos\trimmed
+ Strikes Output Dir: C:\Users\drhan\Desktop\golf\videos\strikes
+=========================================================
+
+Found 24 video(s) to process.
+
+Processing: -FfhI9yyFJk.mp4
+  [Stage 1] Slow-mo transition at: 17.55s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\-FfhI9yyFJk_trimmed.mp4 (3.95 MB)
+
+--- Extracting Golf Strike from: -FfhI9yyFJk_trimmed.mp4 ---
+  FPS=29.97, Frames=526, Duration=17.55s
+  [Step 2] Modal scene brightness: 135.0 (accepted range 115.0–155.0)
+  [Step 2] Gated 60 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.03, dy=0.04 px/frame
+  [Shi-Tomasi] Avg corners/frame: 285.8
+  [Step 3] Smoothed flow range: 0.00 – 32.65 px/frame
+  [Audio] Detected 15 onset(s)
+  [Step 4] Found 1 qualifying peak(s):
+           frame  116 (3.87s)  smoothed=32.65  raw_p99=3.40 px/frame
+  [Step 4] Single candidate — confirmed by audio (dist=0.19s)
+  [Step 4] Impact: frame 116 (3.87s), peak flow = 32.65 px/frame
+  [Step 5] Output: 1.87s -> 5.37s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\-FfhI9yyFJk_strike.mp4 (0.82 MB)
+Processing: -M5SITXMA2Y.mp4
+  [Stage 1] Slow-mo transition at: 18.35s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\-M5SITXMA2Y_trimmed.mp4 (7.57 MB)
+
+--- Extracting Golf Strike from: -M5SITXMA2Y_trimmed.mp4 ---
+  FPS=29.97, Frames=550, Duration=18.35s
+  [Step 2] Modal scene brightness: 105.0 (accepted range 85.0–125.0)
+  [Step 2] Gated 193 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.21, dy=0.42 px/frame
+  [Shi-Tomasi] Avg corners/frame: 283.5
+  [Step 3] Smoothed flow range: 0.00 – 25.43 px/frame
+  [Audio] Detected 15 onset(s)
+  [Step 4] Found 1 qualifying peak(s):
+           frame  366 (12.21s)  smoothed=25.43  raw_p99=3.67 px/frame
+  [Step 4] Single candidate — confirmed by audio (dist=0.31s)
+  [Step 4] Impact: frame 366 (12.21s), peak flow = 25.43 px/frame
+  [Step 5] Output: 10.21s -> 13.71s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\-M5SITXMA2Y_strike.mp4 (1.52 MB)
+Processing: -wg8m-A0hx4.mp4
+  [Stage 1] Slow-mo transition at: 14.10s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\-wg8m-A0hx4_trimmed.mp4 (6.52 MB)
+
+--- Extracting Golf Strike from: -wg8m-A0hx4_trimmed.mp4 ---
+  FPS=29.97, Frames=423, Duration=14.11s
+  [Step 2] Modal scene brightness: 65.0 (accepted range 45.0–85.0)
+  [Step 2] Gated 121 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.31, dy=0.11 px/frame
+  [Shi-Tomasi] Avg corners/frame: 270.6
+  [Step 3] Smoothed flow range: 0.00 – 33.95 px/frame
+  [Audio] Detected 8 onset(s)
+  [Step 4] Found 1 qualifying peak(s):
+           frame  201 (6.71s)  smoothed=33.95  raw_p99=8.76 px/frame
+  [Step 4] Single candidate — confirmed by audio (dist=0.20s)
+  [Step 4] Impact: frame 201 (6.71s), peak flow = 33.95 px/frame
+  [Step 5] Output: 4.71s -> 8.21s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\-wg8m-A0hx4_strike.mp4 (1.91 MB)
+Processing: -x6fBaulaWU.mp4
+  [Stage 1] Slow-mo transition at: 30.60s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\-x6fBaulaWU_trimmed.mp4 (10.45 MB)
+
+--- Extracting Golf Strike from: -x6fBaulaWU_trimmed.mp4 ---
+  FPS=29.97, Frames=918, Duration=30.63s
+  [Step 2] Modal scene brightness: 65.0 (accepted range 45.0–85.0)
+  [Step 2] Gated 102 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.36, dy=0.25 px/frame
+  [Shi-Tomasi] Avg corners/frame: 273.0
+  [Step 3] Smoothed flow range: 0.00 – 55.91 px/frame
+  [Audio] Detected 17 onset(s)
+  [Step 4] Found 0 qualifying peak(s):
+  [Step 4] No flow peaks — using strongest audio onset at 20.01s (amp=226.6)
+  [Step 4] Impact: frame 599 (19.99s), peak flow = 20.32 px/frame
+  [Step 5] Output: 17.99s -> 21.49s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\-x6fBaulaWU_strike.mp4 (1.24 MB)
+Processing: -zN7pkk0r4Q.mp4
+  [Stage 1] Slow-mo transition at: 48.35s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\-zN7pkk0r4Q_trimmed.mp4 (15.09 MB)
+
+--- Extracting Golf Strike from: -zN7pkk0r4Q_trimmed.mp4 ---
+  FPS=29.97, Frames=1450, Duration=48.38s
+  [Step 2] Modal scene brightness: 125.0 (accepted range 105.0–145.0)
+  [Step 2] Gated 197 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=7.80, dy=12.90 px/frame
+  [Shi-Tomasi] Avg corners/frame: 268.6
+  [Step 3] Smoothed flow range: 0.00 – 17.52 px/frame
+  [Audio] Detected 45 onset(s)
+  [Step 4] Found 1 qualifying peak(s):
+           frame 1203 (40.14s)  smoothed=17.52  raw_p99=9.58 px/frame
+  [Step 4] Single candidate — confirmed by audio (dist=0.49s)
+  [Step 4] Impact: frame 1203 (40.14s), peak flow = 17.52 px/frame
+  [Step 5] Output: 38.14s -> 41.64s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\-zN7pkk0r4Q_strike.mp4 (1.23 MB)
+Processing: 0JGU4PO9KHg.mp4
+  [Stage 1] Slow-mo transition at: 27.80s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\0JGU4PO9KHg_trimmed.mp4 (5.92 MB)
+
+--- Extracting Golf Strike from: 0JGU4PO9KHg_trimmed.mp4 ---
+  FPS=29.97, Frames=834, Duration=27.83s
+  [Step 2] Modal scene brightness: 135.0 (accepted range 115.0–155.0)
+  [Step 2] Gated 61 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.26, dy=0.81 px/frame
+  [Shi-Tomasi] Avg corners/frame: 202.0
+  [Step 3] Smoothed flow range: 0.00 – 9.65 px/frame
+  [Audio] Detected 18 onset(s)
+  [Step 4] Found 0 qualifying peak(s):
+  [Step 4] No flow peaks — using strongest audio onset at 22.65s (amp=110.9)
+  [Step 4] Impact: frame 678 (22.62s), peak flow = 6.92 px/frame
+  [Step 5] Output: 20.62s -> 24.12s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\0JGU4PO9KHg_strike.mp4 (0.70 MB)
+Processing: 0PuF8duUo1A.mp4
+  [Stage 1] Slow-mo transition at: 14.60s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\0PuF8duUo1A_trimmed.mp4 (5.05 MB)
+
+--- Extracting Golf Strike from: 0PuF8duUo1A_trimmed.mp4 ---
+  FPS=29.97, Frames=438, Duration=14.61s
+  [Step 2] Modal scene brightness: 75.0 (accepted range 55.0–95.0)
+  [Step 2] Gated 100 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.28, dy=0.63 px/frame
+  [Shi-Tomasi] Avg corners/frame: 283.4
+  [Step 3] Smoothed flow range: 0.00 – 15.92 px/frame
+  [Audio] Detected 8 onset(s)
+  [Step 4] Found 0 qualifying peak(s):
+  [Step 4] No flow peaks — using strongest audio onset at 9.55s (amp=31.1)
+  [Step 4] Impact: frame 286 (9.54s), peak flow = 4.37 px/frame
+  [Step 5] Output: 7.54s -> 11.04s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\0PuF8duUo1A_strike.mp4 (1.03 MB)
+Processing: 0aEZbcQlIm0.mp4
+  [Stage 1] Slow-mo transition at: 37.85s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\0aEZbcQlIm0_trimmed.mp4 (8.17 MB)
+
+--- Extracting Golf Strike from: 0aEZbcQlIm0_trimmed.mp4 ---
+  FPS=29.97, Frames=1135, Duration=37.87s
+  [Step 2] Modal scene brightness: 155.0 (accepted range 135.0–175.0)
+  [Step 2] Gated 48 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.23, dy=0.21 px/frame
+  [Shi-Tomasi] Avg corners/frame: 263.9
+  [Step 3] Smoothed flow range: 0.00 – 8.21 px/frame
+  [Audio] Detected 25 onset(s)
+  [Step 4] Found 1 qualifying peak(s):
+           frame 1131 (37.74s)  smoothed=6.66  raw_p99=3.83 px/frame
+  [Step 4] Single candidate — no audio match within 0.5s
+  [Step 4] Impact: frame 1131 (37.74s), peak flow = 6.66 px/frame
+  [Step 5] Output: 35.74s -> 37.87s (2.13s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\0aEZbcQlIm0_strike.mp4 (0.54 MB)
+Processing: 0am0Cr3Q3-Y.mp4
+  [Stage 1] Slow-mo transition at: 19.65s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\0am0Cr3Q3-Y_trimmed.mp4 (4.17 MB)
+
+--- Extracting Golf Strike from: 0am0Cr3Q3-Y_trimmed.mp4 ---
+  FPS=29.97, Frames=589, Duration=19.65s
+  [Step 2] Modal scene brightness: 125.0 (accepted range 105.0–145.0)
+  [Step 2] Gated 100 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.01, dy=0.00 px/frame
+  [Shi-Tomasi] Avg corners/frame: 201.7
+  [Step 3] Smoothed flow range: 0.00 – 26.29 px/frame
+  [Audio] Detected 16 onset(s)
+  [Step 4] Found 0 qualifying peak(s):
+  [Step 4] No flow peaks — using strongest audio onset at 13.50s (amp=76.2)
+  [Step 4] Impact: frame 404 (13.48s), peak flow = 4.02 px/frame
+  [Step 5] Output: 11.48s -> 14.98s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\0am0Cr3Q3-Y_strike.mp4 (0.66 MB)
+Processing: 0eFgAUfHsEk.mp4
+  [Stage 1] Slow-mo transition at: 26.60s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\0eFgAUfHsEk_trimmed.mp4 (9.13 MB)
+
+--- Extracting Golf Strike from: 0eFgAUfHsEk_trimmed.mp4 ---
+  FPS=29.97, Frames=798, Duration=26.63s
+  [Step 2] Modal scene brightness: 125.0 (accepted range 105.0–145.0)
+  [Step 2] Gated 53 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.15, dy=0.21 px/frame
+  [Shi-Tomasi] Avg corners/frame: 293.3
+  [Step 3] Smoothed flow range: 0.00 – 14.50 px/frame
+  [Audio] Detected 27 onset(s)
+  [Step 4] Found 0 qualifying peak(s):
+  [Step 4] No flow peaks — using strongest audio onset at 15.33s (amp=17.2)
+  [Step 4] Impact: frame 459 (15.32s), peak flow = 3.19 px/frame
+  [Step 5] Output: 13.32s -> 16.82s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\0eFgAUfHsEk_strike.mp4 (1.23 MB)
+Processing: 0fJeBnmMKUw.mp4
+  [Stage 1] Slow-mo transition at: 34.85s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\0fJeBnmMKUw_trimmed.mp4 (14.54 MB)
+
+--- Extracting Golf Strike from: 0fJeBnmMKUw_trimmed.mp4 ---
+  FPS=29.97, Frames=1045, Duration=34.87s
+  [Step 2] Modal scene brightness: 115.0 (accepted range 95.0–135.0)
+  [Step 2] Gated 64 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.74, dy=0.14 px/frame
+  [Shi-Tomasi] Avg corners/frame: 296.3
+  [Step 3] Smoothed flow range: 0.00 – 7.76 px/frame
+  [Audio] Detected 27 onset(s)
+  [Step 4] Found 0 qualifying peak(s):
+  [Step 4] No flow peaks — using strongest audio onset at 27.82s (amp=5.1)
+  [Step 4] Impact: frame 833 (27.79s), peak flow = 4.29 px/frame
+  [Step 5] Output: 25.79s -> 29.29s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\0fJeBnmMKUw_strike.mp4 (1.54 MB)
+Processing: 0i8zZala36E.mp4
+  [Stage 1] Slow-mo transition at: 23.15s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\0i8zZala36E_trimmed.mp4 (15.18 MB)
+
+--- Extracting Golf Strike from: 0i8zZala36E_trimmed.mp4 ---
+  FPS=29.97, Frames=694, Duration=23.16s
+  [Step 2] Modal scene brightness: 145.0 (accepted range 125.0–165.0)
+  [Step 2] Gated 412 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.88, dy=1.60 px/frame
+  [Shi-Tomasi] Avg corners/frame: 265.6
+  [Step 3] Smoothed flow range: 0.00 – 8.12 px/frame
+  [Audio] Detected 15 onset(s)
+  [Step 4] Found 1 qualifying peak(s):
+           frame  446 (14.88s)  smoothed=8.12  raw_p99=5.84 px/frame
+  [Step 4] Single candidate — confirmed by audio (dist=0.38s)
+  [Step 4] Impact: frame 446 (14.88s), peak flow = 8.12 px/frame
+  [Step 5] Output: 12.88s -> 16.38s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\0i8zZala36E_strike.mp4 (2.01 MB)
+Processing: _9_gJ-GOwxw.mp4
+  [Stage 1] Slow-mo transition at: 25.60s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\_9_gJ-GOwxw_trimmed.mp4 (11.00 MB)
+
+--- Extracting Golf Strike from: _9_gJ-GOwxw_trimmed.mp4 ---
+  FPS=29.97, Frames=768, Duration=25.63s
+  [Step 2] Modal scene brightness: 165.0 (accepted range 145.0–185.0)
+  [Step 2] Gated 224 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=3.00, dy=1.57 px/frame
+  [Shi-Tomasi] Avg corners/frame: 233.2
+  [Step 3] Smoothed flow range: 0.00 – 62.82 px/frame
+  [Audio] Detected 24 onset(s)
+  [Step 4] Found 1 qualifying peak(s):
+           frame  370 (12.35s)  smoothed=62.82  raw_p99=6.82 px/frame
+  [Step 4] Single candidate — no audio match within 0.5s
+  [Step 4] Impact: frame 370 (12.35s), peak flow = 62.82 px/frame
+  [Step 5] Output: 10.35s -> 13.85s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\_9_gJ-GOwxw_strike.mp4 (1.40 MB)
+Processing: _C3AOgnp1-A.mp4
+  [Stage 1] Slow-mo transition at: 31.80s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\_C3AOgnp1-A_trimmed.mp4 (10.10 MB)
+
+--- Extracting Golf Strike from: _C3AOgnp1-A_trimmed.mp4 ---
+  FPS=29.97, Frames=954, Duration=31.83s
+  [Step 2] Modal scene brightness: 125.0 (accepted range 105.0–145.0)
+  [Step 2] Gated 91 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=1.31, dy=0.27 px/frame
+  [Shi-Tomasi] Avg corners/frame: 173.9
+  [Step 3] Smoothed flow range: 0.00 – 256.57 px/frame
+  [Audio] Detected 30 onset(s)
+  [Step 4] Found 1 qualifying peak(s):
+           frame  311 (10.38s)  smoothed=256.57  raw_p99=4.33 px/frame
+  [Step 4] Single candidate — confirmed by audio (dist=0.12s)
+  [Step 4] Impact: frame 311 (10.38s), peak flow = 256.57 px/frame
+  [Step 5] Output: 8.38s -> 11.88s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\_C3AOgnp1-A_strike.mp4 (1.05 MB)
+Processing: _LCRjBY4508.mp4
+  [Stage 1] Slow-mo transition at: 13.10s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\_LCRjBY4508_trimmed.mp4 (2.46 MB)
+
+--- Extracting Golf Strike from: _LCRjBY4508_trimmed.mp4 ---
+  FPS=29.97, Frames=393, Duration=13.11s
+  [Step 2] Modal scene brightness: 135.0 (accepted range 115.0–155.0)
+  [Step 2] Gated 103 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.15, dy=0.11 px/frame
+  [Shi-Tomasi] Avg corners/frame: 226.0
+  [Step 3] Smoothed flow range: 0.00 – 14.12 px/frame
+  [Audio] Detected 9 onset(s)
+  [Step 4] Found 0 qualifying peak(s):
+  [Step 4] No flow peaks — using strongest audio onset at 6.56s (amp=255.0)
+  [Step 4] Impact: frame 196 (6.54s), peak flow = 2.08 px/frame
+  [Step 5] Output: 4.54s -> 8.04s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\_LCRjBY4508_strike.mp4 (0.76 MB)
+Processing: _MnmzCJCZRo.mp4
+  [Stage 1] Slow-mo transition at: 26.80s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\_MnmzCJCZRo_trimmed.mp4 (6.34 MB)
+
+--- Extracting Golf Strike from: _MnmzCJCZRo_trimmed.mp4 ---
+  FPS=29.97, Frames=804, Duration=26.83s
+  [Step 2] Modal scene brightness: 125.0 (accepted range 105.0–145.0)
+  [Step 2] Gated 100 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.42, dy=0.06 px/frame
+  [Shi-Tomasi] Avg corners/frame: 247.0
+  [Step 3] Smoothed flow range: 0.00 – 25.35 px/frame
+  [Audio] Detected 19 onset(s)
+  [Step 4] Found 1 qualifying peak(s):
+           frame  470 (15.68s)  smoothed=25.35  raw_p99=3.58 px/frame
+  [Step 4] Single candidate — confirmed by audio (dist=0.11s)
+  [Step 4] Impact: frame 470 (15.68s), peak flow = 25.35 px/frame
+  [Step 5] Output: 13.68s -> 17.18s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\_MnmzCJCZRo_strike.mp4 (0.82 MB)
+Processing: __195BaMIGc.mp4
+  [Stage 1] Slow-mo transition at: 25.50s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\__195BaMIGc_trimmed.mp4 (6.66 MB)
+
+--- Extracting Golf Strike from: __195BaMIGc_trimmed.mp4 ---
+  FPS=29.97, Frames=765, Duration=25.53s
+  [Step 2] Modal scene brightness: 125.0 (accepted range 105.0–145.0)
+  [Step 2] Gated 116 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.11, dy=0.26 px/frame
+  [Shi-Tomasi] Avg corners/frame: 156.0
+  [Step 3] Smoothed flow range: 0.00 – 17.59 px/frame
+  [Audio] Detected 19 onset(s)
+  [Step 4] Found 1 qualifying peak(s):
+           frame  665 (22.19s)  smoothed=17.59  raw_p99=3.36 px/frame
+  [Step 4] Single candidate — confirmed by audio (dist=0.04s)
+  [Step 4] Impact: frame 665 (22.19s), peak flow = 17.59 px/frame
+  [Step 5] Output: 20.19s -> 23.69s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\__195BaMIGc_strike.mp4 (0.80 MB)
+Processing: _fmzNxBEbj0.mp4
+  [Stage 1] Slow-mo transition at: 19.20s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\_fmzNxBEbj0_trimmed.mp4 (3.22 MB)
+
+--- Extracting Golf Strike from: _fmzNxBEbj0_trimmed.mp4 ---
+  FPS=29.97, Frames=576, Duration=19.22s
+  [Step 2] Modal scene brightness: 125.0 (accepted range 105.0–145.0)
+  [Step 2] Gated 46 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.10, dy=0.16 px/frame
+  [Shi-Tomasi] Avg corners/frame: 286.5
+  [Step 3] Smoothed flow range: 0.00 – 8.10 px/frame
+  [Audio] Detected 14 onset(s)
+  [Step 4] Found 0 qualifying peak(s):
+  [Step 4] No flow peaks — using strongest audio onset at 13.76s (amp=172.8)
+  [Step 4] Impact: frame 412 (13.75s), peak flow = 4.69 px/frame
+  [Step 5] Output: 11.75s -> 15.25s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\_fmzNxBEbj0_strike.mp4 (0.60 MB)
+Processing: _gOExwJm-GE.mp4
+  [Stage 1] Slow-mo transition at: 26.10s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\_gOExwJm-GE_trimmed.mp4 (4.86 MB)
+
+--- Extracting Golf Strike from: _gOExwJm-GE_trimmed.mp4 ---
+  FPS=29.97, Frames=783, Duration=26.13s
+  [Step 2] Modal scene brightness: 115.0 (accepted range 95.0–135.0)
+  [Step 2] Gated 64 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.20, dy=0.47 px/frame
+  [Shi-Tomasi] Avg corners/frame: 294.5
+  [Step 3] Smoothed flow range: 0.00 – 40.03 px/frame
+  [Audio] Detected 33 onset(s)
+  [Step 4] Found 0 qualifying peak(s):
+  [Step 4] No flow peaks — using strongest audio onset at 17.59s (amp=118.2)
+  [Step 4] Impact: frame 527 (17.58s), peak flow = 4.03 px/frame
+  [Step 5] Output: 15.58s -> 19.08s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\_gOExwJm-GE_strike.mp4 (0.60 MB)
+Processing: _gb_suqFrC0.mp4
+  [Stage 1] Slow-mo transition at: 25.70s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\_gb_suqFrC0_trimmed.mp4 (11.77 MB)
+
+--- Extracting Golf Strike from: _gb_suqFrC0_trimmed.mp4 ---
+  FPS=29.97, Frames=771, Duration=25.73s
+  [Step 2] Modal scene brightness: 115.0 (accepted range 95.0–135.0)
+  [Step 2] Gated 109 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.07, dy=0.17 px/frame
+  [Shi-Tomasi] Avg corners/frame: 291.1
+  [Step 3] Smoothed flow range: 0.00 – 9.42 px/frame
+  [Audio] Detected 22 onset(s)
+  [Step 4] Found 0 qualifying peak(s):
+  [Step 4] No flow peaks — using strongest audio onset at 14.37s (amp=83.8)
+  [Step 4] Impact: frame 430 (14.35s), peak flow = 2.06 px/frame
+  [Step 5] Output: 12.35s -> 15.85s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\_gb_suqFrC0_strike.mp4 (1.39 MB)
+Processing: _qtYF0FJBWo.mp4
+  [Stage 1] Slow-mo transition at: 26.45s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\_qtYF0FJBWo_trimmed.mp4 (29.41 MB)
+
+--- Extracting Golf Strike from: _qtYF0FJBWo_trimmed.mp4 ---
+  FPS=29.97, Frames=793, Duration=26.46s
+  [Step 2] Modal scene brightness: 85.0 (accepted range 65.0–105.0)
+  [Step 2] Gated 369 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=9.00, dy=1.00 px/frame
+  [Shi-Tomasi] Avg corners/frame: 289.2
+  [Step 3] Smoothed flow range: 0.00 – 6.57 px/frame
+  [Audio] Detected 20 onset(s)
+  [Step 4] Found 0 qualifying peak(s):
+  [Step 4] No flow peaks — using strongest audio onset at 20.46s (amp=143.0)
+  [Step 4] Impact: frame 613 (20.45s), peak flow = 3.13 px/frame
+  [Step 5] Output: 18.45s -> 21.95s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\_qtYF0FJBWo_strike.mp4 (3.72 MB)
+Processing: _rFatlaZhEQ.mp4
+  [Stage 1] Slow-mo transition at: 37.55s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\_rFatlaZhEQ_trimmed.mp4 (23.80 MB)
+
+--- Extracting Golf Strike from: _rFatlaZhEQ_trimmed.mp4 ---
+  FPS=29.97, Frames=1126, Duration=37.57s
+  [Step 2] Modal scene brightness: 105.0 (accepted range 85.0–125.0)
+  [Step 2] Gated 151 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=1.17, dy=0.66 px/frame
+  [Shi-Tomasi] Avg corners/frame: 293.1
+  [Step 3] Smoothed flow range: 0.00 – 10.50 px/frame
+  [Audio] Detected 26 onset(s)
+  [Step 4] Found 0 qualifying peak(s):
+  [Step 4] No flow peaks — using strongest audio onset at 24.49s (amp=98.9)
+  [Step 4] Impact: frame 734 (24.49s), peak flow = 4.08 px/frame
+  [Step 5] Output: 22.49s -> 25.99s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\_rFatlaZhEQ_strike.mp4 (2.13 MB)
+Processing: _t_grJlqR6A.mp4
+  [Stage 1] Slow-mo transition at: 46.75s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\_t_grJlqR6A_trimmed.mp4 (7.57 MB)
+
+--- Extracting Golf Strike from: _t_grJlqR6A_trimmed.mp4 ---
+  FPS=29.97, Frames=1402, Duration=46.78s
+  [Step 2] Modal scene brightness: 105.0 (accepted range 85.0–125.0)
+  [Step 2] Gated 88 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.14, dy=0.63 px/frame
+  [Shi-Tomasi] Avg corners/frame: 187.0
+  [Step 3] Smoothed flow range: 0.00 – 13.00 px/frame
+  [Audio] Detected 35 onset(s)
+  [Step 4] Found 0 qualifying peak(s):
+  [Step 4] No flow peaks — using strongest audio onset at 42.10s (amp=123.4)
+  [Step 4] Impact: frame 1261 (42.08s), peak flow = 0.23 px/frame
+  [Step 5] Output: 40.08s -> 43.58s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\_t_grJlqR6A_strike.mp4 (0.49 MB)
+Processing: _tkpPbeTYz4.mp4
+  [Stage 1] Slow-mo transition at: 24.20s
+  [Stage 1] Saved trimmed clip: C:\Users\drhan\Desktop\golf\videos\trimmed\_tkpPbeTYz4_trimmed.mp4 (11.73 MB)
+
+--- Extracting Golf Strike from: _tkpPbeTYz4_trimmed.mp4 ---
+  FPS=29.97, Frames=726, Duration=24.22s
+  [Step 2] Modal scene brightness: 125.0 (accepted range 105.0–145.0)
+  [Step 2] Gated 125 frame pair(s) (blackout / fade / unstable / off-modal).
+  [Ego-Motion] Max median flow: dx=0.21, dy=0.17 px/frame
+  [Shi-Tomasi] Avg corners/frame: 289.4
+  [Step 3] Smoothed flow range: 0.00 – 13.43 px/frame
+  [Audio] Detected 18 onset(s)
+  [Step 4] Found 0 qualifying peak(s):
+  [Step 4] No flow peaks — using strongest audio onset at 12.97s (amp=139.0)
+  [Step 4] Impact: frame 388 (12.95s), peak flow = 3.63 px/frame
+  [Step 5] Output: 10.95s -> 14.45s (3.50s)
+  [Done] Strike clip saved: C:\Users\drhan\Desktop\golf\videos\strikes\_tkpPbeTYz4_strike.mp4 (1.73 MB)
+
+Pipeline Complete! Extracted 24/24 strike clip(s).
+PS C:\Users\drhan\Desktop\golf>
+
+
+
+
+
+
+

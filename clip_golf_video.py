@@ -21,9 +21,9 @@ def compute_attention_map(
     blur_sigma=20,
 ):
     """
-    Returns a (H, W) float32 attention map in [0, 1] centred on Shi-Tomasi
-    corner features.  Pixels far from any corner are attenuated toward zero,
-    making downstream optical flow ignore grass ripple / sky / background.
+    Returns (attention, num_corners) where attention is a (H, W) float32
+    map in [0, 1] centred on Shi-Tomasi corner features, and num_corners is
+    the raw detection count (stored once, reused for diagnostics).
     """
     corners = cv2.goodFeaturesToTrack(
         gray_frame,
@@ -35,9 +35,10 @@ def compute_attention_map(
     )
 
     h, w = gray_frame.shape
+    num_corners = len(corners) if corners is not None else 0
     # Fallback: too few corners (blank / very dark frame) — no masking.
-    if corners is None or len(corners) < 10:
-        return np.ones((h, w), dtype=np.float32)
+    if corners is None or num_corners < 10:
+        return np.ones((h, w), dtype=np.float32), num_corners
 
     attention = np.zeros((h, w), dtype=np.float32)
     for c in corners:
@@ -47,7 +48,7 @@ def compute_attention_map(
 
     attention = cv2.GaussianBlur(attention, (0, 0), sigmaX=blur_sigma)
     attention = attention / (attention.max() + 1e-8)
-    return attention
+    return attention, num_corners
 
 try:
     import imageio_ffmpeg
@@ -164,7 +165,58 @@ def trim_slomo(video_path, output_path, ffmpeg_path, fast_mode=False):
 # Output: videos/strikes/*_strike.mp4
 # ==============================================================================
 
-def extract_golf_strike(video_path, output_path, ffmpeg_path, fast_mode=False, use_attention_mask=True):
+def detect_audio_onsets(video_path, ffmpeg_path, sr=16000,
+                        bandpass_low=2000, bandpass_high=7900,
+                        win_sec=0.025, hop_sec=0.01,
+                        thresh_mult=3.0, min_dist_sec=0.5):
+    """
+    Extract audio, compute spectral-flux onset strength in the 2-8 kHz band,
+    and return a list of (timestamp_sec, peak_amplitude) for detected onsets.
+    """
+    from scipy.ndimage import maximum_filter1d
+    from scipy.signal import butter, sosfilt
+
+    cmd = [ffmpeg_path, "-y", "-i", video_path,
+           "-f", "s16le", "-ac", "1", "-ar", str(sr), "-"]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    raw, _ = proc.communicate()
+    if not raw:
+        return []
+
+    audio = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+
+    # Band-pass 2–8 kHz to isolate club-ball "thwack" from wind/cart hum
+    sos = butter(4, [bandpass_low, bandpass_high], btype='band', fs=sr, output='sos')
+    audio_filt = sosfilt(sos, audio)
+
+    win_len = int(sr * win_sec)
+    hop_len = int(sr * hop_sec)
+    n_fft = 2 ** int(np.ceil(np.log2(win_len)))
+
+    onset_env, prev_mag = [], None
+    for start in range(0, len(audio_filt) - win_len, hop_len):
+        frame = audio_filt[start:start + win_len]
+        spec = np.abs(np.fft.rfft(frame * np.hanning(win_len), n=n_fft))
+        if prev_mag is not None:
+            onset_env.append(float(np.sum(np.maximum(spec - prev_mag, 0))))
+        prev_mag = spec
+
+    onset_env = np.array(onset_env)
+    if len(onset_env) == 0:
+        return []
+
+    med = np.median(onset_env)
+    thresh = med + thresh_mult * np.median(np.abs(onset_env - med))
+    min_dist_frames = max(1, int(min_dist_sec / hop_sec))
+    local_max = (onset_env == maximum_filter1d(onset_env, size=min_dist_frames * 2 + 1))
+    peaks_idx = np.where(local_max & (onset_env >= thresh))[0]
+
+    peaks_sec = peaks_idx * hop_sec + win_sec / 2.0
+    return list(zip(peaks_sec.tolist(), onset_env[peaks_idx].tolist()))
+
+
+def extract_golf_strike(video_path, output_path, ffmpeg_path, fast_mode=False,
+                        use_attention_mask=True, use_audio_gate=False):
     """
     Detects the golf strike impact frame using Dense Optical Flow (Farneback).
 
@@ -209,11 +261,18 @@ def extract_golf_strike(video_path, output_path, ffmpeg_path, fast_mode=False, u
         print("  [Error] Not enough frames.")
         return False
 
-    # Step 1b: Compute Shi-Tomasi attention maps (one per frame)
+    # Step 1b: Compute Shi-Tomasi attention maps (one per frame).
+    # Corner counts are stored here and reused in Step 2b — no second pass.
     if use_attention_mask:
-        attention_maps = [compute_attention_map(f) for f in frames]
+        attention_maps = []
+        corner_counts = []
+        for f in frames:
+            att, n = compute_attention_map(f)
+            attention_maps.append(att)
+            corner_counts.append(n)
     else:
         attention_maps = None
+        corner_counts = []
 
     # Raw per-frame mean brightness — used for all four scene-stability gates.
     # (The attention map is only applied inside the optical flow computation.)
@@ -264,7 +323,9 @@ def extract_golf_strike(video_path, output_path, ffmpeg_path, fast_mode=False, u
         stable[i] = (consec_stable >= STABILITY_WINDOW)
 
     motion_raw = [0.0]
+    p99_raw    = [0.0]  # cached raw p99 per frame — reused in Step 4, no recompute
     gated_count = 0
+    max_dx = max_dy = 0.0  # ego-motion diagnostic accumulators
     for i in range(1, len(frames)):
         prev_gray = frames[i - 1]
         curr_gray = frames[i]
@@ -281,6 +342,7 @@ def extract_golf_strike(video_path, output_path, ffmpeg_path, fast_mode=False, u
                 or delta_bright >= DELTA_BRIGHT_GATE
                 or not stable[i]):
             motion_raw.append(0.0)
+            p99_raw.append(0.0)
             gated_count += 1
             continue
 
@@ -290,16 +352,29 @@ def extract_golf_strike(video_path, output_path, ffmpeg_path, fast_mode=False, u
             att_combined = np.minimum(attention_maps[i - 1], attention_maps[i])
             masked_prev = (prev_gray.astype(np.float32) * att_combined).astype(np.uint8)
             masked_curr = (curr_gray.astype(np.float32) * att_combined).astype(np.uint8)
+            # Ego-motion estimate from cheap raw (unmasked) flow — masked background
+            # biases the median so we use the original frames at reduced quality.
+            flow_raw = cv2.calcOpticalFlowFarneback(
+                prev_gray, curr_gray, None,
+                pyr_scale=0.5, levels=2, winsize=15,
+                iterations=1, poly_n=5, poly_sigma=1.1, flags=0
+            )
+            dx_median = np.median(flow_raw[..., 0])
+            dy_median = np.median(flow_raw[..., 1])
             flow = cv2.calcOpticalFlowFarneback(
                 masked_prev, masked_curr, None,
                 pyr_scale=0.5, levels=3, winsize=15,
                 iterations=3, poly_n=5, poly_sigma=1.2, flags=0
             )
+            # Cancel global camera translation
+            flow[..., 0] -= dx_median
+            flow[..., 1] -= dy_median
             mag, _ = cv2.cartToPolar(flow[..., 0], flow[..., 1])
             mag_masked = mag * att_combined
             mag_nonzero = mag_masked[mag_masked > 0]
             if len(mag_nonzero) < 100:
                 motion_raw.append(0.0)
+                p99_raw.append(0.0)
                 continue
             p95 = float(np.percentile(mag_nonzero, 95))
             p99 = float(np.percentile(mag_nonzero, 99))
@@ -309,26 +384,32 @@ def extract_golf_strike(video_path, output_path, ffmpeg_path, fast_mode=False, u
                 pyr_scale=0.5, levels=3, winsize=15,
                 iterations=3, poly_n=5, poly_sigma=1.2, flags=0
             )
+            # Cancel global camera translation
+            dx_median = np.median(flow[..., 0])
+            dy_median = np.median(flow[..., 1])
+            flow[..., 0] -= dx_median
+            flow[..., 1] -= dy_median
             mag, _ = cv2.cartToPolar(flow[..., 0], flow[..., 1])
             p95 = float(np.percentile(mag, 95))
             p99 = float(np.percentile(mag, 99))
+        # Track max ego-motion for diagnostic
+        max_dx = max(max_dx, abs(dx_median))
+        max_dy = max(max_dy, abs(dy_median))
         # Score = p99 * (p99/p95): amplifies localized fast motion (clubhead) vs
         # diffuse slow motion (walking). Strike: p99>>p95 => high score.
         # Walking: p99~p95 => score barely above p99.
         motion_raw.append(p99 * (p99 / (p95 + 1e-4)))
+        p99_raw.append(p99)
 
     print(f"  [Step 2] Modal scene brightness: {modal_brightness:.1f} "
           f"(accepted range {MODAL_LOW:.1f}–{MODAL_HIGH:.1f})")
     if gated_count > 0:
         print(f"  [Step 2] Gated {gated_count} frame pair(s) "
               f"(blackout / fade / unstable / off-modal).")
+    print(f"  [Ego-Motion] Max median flow: dx={max_dx:.2f}, dy={max_dy:.2f} px/frame")
 
-    # Step 2b: Shi-Tomasi diagnostic
+    # Step 2b: Shi-Tomasi diagnostic — reads corner_counts stored in Step 1b (no recompute)
     if use_attention_mask:
-        corner_counts = []
-        for f in frames:
-            c = cv2.goodFeaturesToTrack(f, 300, 0.01, 5, blockSize=5)
-            corner_counts.append(len(c) if c is not None else 0)
         avg_corners = float(np.mean(corner_counts))
         print(f"  [Shi-Tomasi] Avg corners/frame: {avg_corners:.1f}")
         if avg_corners < 20:
@@ -342,6 +423,15 @@ def extract_golf_strike(video_path, output_path, ffmpeg_path, fast_mode=False, u
 
     print(f"  [Step 3] Smoothed flow range: 0.00 – {max_flow:.2f} px/frame")
 
+    # Step 3b: Audio onset detection (if gate enabled)
+    audio_peaks = []
+    if use_audio_gate:
+        audio_peaks = detect_audio_onsets(video_path, ffmpeg_path)
+        if audio_peaks:
+            print(f"  [Audio] Detected {len(audio_peaks)} onset(s)")
+        else:
+            print(f"  [Audio] No onsets found — audio gate skipped")
+
     # Step 4: Impact frame localized via the last intense swing peak.
     # Find all local maxima (peaks) in the smoothed motion signal.
     # A peak is considered a candidate swing if:
@@ -352,33 +442,67 @@ def extract_golf_strike(video_path, output_path, ffmpeg_path, fast_mode=False, u
 
     swing_candidates = []
     for p in peaks:
-        if p < 1 or p >= len(frames):
+        if p < 1 or p >= len(p99_raw):
             continue
-        pg = frames[p - 1]
-        cg = frames[p]
-        if use_attention_mask:
-            att = np.minimum(attention_maps[p - 1], attention_maps[p])
-            pg = (pg.astype(np.float32) * att).astype(np.uint8)
-            cg = (cg.astype(np.float32) * att).astype(np.uint8)
-        flow = cv2.calcOpticalFlowFarneback(
-            pg, cg, None,
-            pyr_scale=0.5, levels=3, winsize=15,
-            iterations=3, poly_n=5, poly_sigma=1.2, flags=0
-        )
-        mag, _ = cv2.cartToPolar(flow[..., 0], flow[..., 1])
-        p99 = float(np.percentile(mag, 99))
-
-        if smoothed[p] >= max_flow * 0.70 and p99 >= 3.2:
+        if smoothed[p] >= max_flow * 0.70 and p99_raw[p] >= 3.2:
             swing_candidates.append(p)
-            
-    if len(swing_candidates) > 0:
-        impact_frame = swing_candidates[-1]
-    else:
-        # Fallback to global argmax if no peaks match
-        impact_frame = int(np.argmax(smoothed))
-        
-    impact_sec = impact_frame / fps
 
+    # Diagnostic: all qualifying peaks
+    print(f"  [Step 4] Found {len(swing_candidates)} qualifying peak(s):")
+    for p in swing_candidates:
+        print(f"           frame {p:4d} ({p/fps:.2f}s)  "
+              f"smoothed={smoothed[p]:.2f}  raw_p99={p99_raw[p]:.2f} px/frame")
+
+    # Step 4b: Audio-assisted tie-breaking
+    AUDIO_WINDOW_SEC = 0.5
+
+    def audio_score_for_frame(frame_idx):
+        t = frame_idx / fps
+        best_amp, best_dist = 0.0, AUDIO_WINDOW_SEC + 1.0
+        for t_a, amp in audio_peaks:
+            d = abs(t_a - t)
+            if d <= AUDIO_WINDOW_SEC and d < best_dist:
+                best_dist, best_amp = d, amp
+        return best_amp, best_dist
+
+    if len(swing_candidates) == 0:
+        if use_audio_gate and audio_peaks:
+            strongest = max(audio_peaks, key=lambda x: x[1])
+            impact_frame = int(strongest[0] * fps)
+            print(f"  [Step 4] No flow peaks — using strongest audio onset at "
+                  f"{strongest[0]:.2f}s (amp={strongest[1]:.1f})")
+        else:
+            impact_frame = int(np.argmax(smoothed))
+            print(f"  [Step 4] No flow peaks — global argmax fallback frame {impact_frame}")
+
+    elif len(swing_candidates) == 1:
+        impact_frame = swing_candidates[0]
+        if use_audio_gate and audio_peaks:
+            amp, dist = audio_score_for_frame(impact_frame)
+            tag = f"confirmed by audio (dist={dist:.2f}s)" if amp > 0 else f"no audio match within {AUDIO_WINDOW_SEC}s"
+            print(f"  [Step 4] Single candidate — {tag}")
+
+    else:
+        print(f"  [Step 4] Multiple candidates ({len(swing_candidates)}) — audio tie-breaker")
+        best_frame, best_combined = None, -1.0
+        for p in swing_candidates:
+            amp, dist = audio_score_for_frame(p)
+            if amp > 0:
+                combined = smoothed[p] * amp / (1.0 + dist * 10)
+                print(f"           frame {p:4d} ({p/fps:.2f}s)  flow={smoothed[p]:.2f}  "
+                      f"audio_amp={amp:.1f}  dist={dist:.2f}s  combined={combined:.2f}")
+                if combined > best_combined:
+                    best_combined, best_frame = combined, p
+        if best_frame is not None:
+            impact_frame = best_frame
+            print(f"  [Step 4] Selected frame {impact_frame} by audio tie-breaker")
+        else:
+            # No audio match — fall back to highest raw p99
+            best_idx = int(np.argmax([p99_raw[p] for p in swing_candidates]))
+            impact_frame = swing_candidates[best_idx]
+            print(f"  [Step 4] No audio match — using highest raw p99 frame {impact_frame}")
+
+    impact_sec = impact_frame / fps
     print(f"  [Step 4] Impact: frame {impact_frame} ({impact_sec:.2f}s), "
           f"peak flow = {smoothed[impact_frame]:.2f} px/frame")
 
@@ -443,6 +567,8 @@ def main():
     )
     parser.add_argument("-f", "--fast", action="store_true", help="Stream copy, no re-encode.")
     parser.add_argument("--ffmpeg-path", help="Path to custom ffmpeg binary.")
+    parser.add_argument("--audio", action="store_true",
+                        help="Enable audio onset gate for tie-breaking between flow peaks.")
 
     args = parser.parse_args()
     ffmpeg_path = get_ffmpeg_cmd(args.ffmpeg_path)
@@ -485,7 +611,8 @@ def main():
             continue
 
         trim_src = trimmed_path if os.path.exists(trimmed_path) else full_path
-        ok_s2 = extract_golf_strike(trim_src, strike_path, ffmpeg_path, fast_mode=args.fast)
+        ok_s2 = extract_golf_strike(trim_src, strike_path, ffmpeg_path,
+                                    fast_mode=args.fast, use_audio_gate=args.audio)
         if ok_s2:
             ok_count += 1
 

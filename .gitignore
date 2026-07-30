@@ -3,6 +3,8 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Ignore large raw & intermediate video files
+# Ignore all video folders and mp4 files
 videos/full/
 videos/trimmed/
+videos/strikes/
+*.mp4
