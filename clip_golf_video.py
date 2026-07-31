@@ -363,8 +363,8 @@ def extract_golf_strike(video_path, output_path, ffmpeg_path, fast_mode=False,
             dy_median = np.median(flow_raw[..., 1])
             flow = cv2.calcOpticalFlowFarneback(
                 masked_prev, masked_curr, None,
-                pyr_scale=0.5, levels=3, winsize=15,
-                iterations=3, poly_n=5, poly_sigma=1.2, flags=0
+                pyr_scale=0.5, levels=4, winsize=9,
+                iterations=5, poly_n=5, poly_sigma=1.1, flags=0
             )
             # Cancel global camera translation
             flow[..., 0] -= dx_median
@@ -376,13 +376,13 @@ def extract_golf_strike(video_path, output_path, ffmpeg_path, fast_mode=False,
                 motion_raw.append(0.0)
                 p99_raw.append(0.0)
                 continue
-            p95 = float(np.percentile(mag_nonzero, 95))
+            p95 = max(float(np.percentile(mag_nonzero, 95)), 0.5)
             p99 = float(np.percentile(mag_nonzero, 99))
         else:
             flow = cv2.calcOpticalFlowFarneback(
                 prev_gray, curr_gray, None,
-                pyr_scale=0.5, levels=3, winsize=15,
-                iterations=3, poly_n=5, poly_sigma=1.2, flags=0
+                pyr_scale=0.5, levels=4, winsize=9,
+                iterations=5, poly_n=5, poly_sigma=1.1, flags=0
             )
             # Cancel global camera translation
             dx_median = np.median(flow[..., 0])
@@ -390,7 +390,7 @@ def extract_golf_strike(video_path, output_path, ffmpeg_path, fast_mode=False,
             flow[..., 0] -= dx_median
             flow[..., 1] -= dy_median
             mag, _ = cv2.cartToPolar(flow[..., 0], flow[..., 1])
-            p95 = float(np.percentile(mag, 95))
+            p95 = max(float(np.percentile(mag, 95)), 0.5)
             p99 = float(np.percentile(mag, 99))
         # Track max ego-motion for diagnostic
         max_dx = max(max_dx, abs(dx_median))
@@ -419,6 +419,19 @@ def extract_golf_strike(video_path, output_path, ffmpeg_path, fast_mode=False,
     # Step 3: Gaussian smoothing (sigma=2, lighter than MOG2 — flow is cleaner)
     motion = np.array(motion_raw)
     smoothed = gaussian_filter1d(motion, sigma=2.0)
+
+    # Temporal bandpass: subtract sustained low-frequency motion (walking)
+    # so that brief swing bursts stand out.  Walking raises the baseline
+    # slowly; the swing is a sharp 2-4 s spike.  Removing ~70 % of the
+    # 3-second low-pass component kills walking while preserving the swing.
+    # Temporal bandpass: compute a very-smoothed version (10-second low-pass)
+    # that represents the "background motion level" from sustained walking.
+    # Subtract it to zero out walking, then clip negative values.
+    # The swing peak, being brief (2-4s), is barely affected by a 10s low-pass.
+    background_motion = gaussian_filter1d(smoothed, sigma=10.0 * fps)
+    smoothed = smoothed - background_motion * 0.5
+    smoothed = np.maximum(smoothed, 0.0)
+
     max_flow = float(np.max(smoothed))
 
     print(f"  [Step 3] Smoothed flow range: 0.00 – {max_flow:.2f} px/frame")
@@ -432,75 +445,132 @@ def extract_golf_strike(video_path, output_path, ffmpeg_path, fast_mode=False,
         else:
             print(f"  [Audio] No onsets found — audio gate skipped")
 
-    # Step 4: Impact frame localized via the last intense swing peak.
-    # Find all local maxima (peaks) in the smoothed motion signal.
-    # A peak is considered a candidate swing if:
-    # 1. Its smoothed score is at least 70% of the global max score.
-    # 2. The raw p99 flow magnitude at that peak frame is at least 3.2 px/frame.
-    # This filters out slow continuous movements and selects the last practice/real swing.
-    peaks, _ = find_peaks(smoothed, distance=int(1.5 * fps))
+    # Step 4: Score every peak by swing-likeness physics and pick the winner.
+    peaks, peak_props = find_peaks(smoothed, distance=int(1.5 * fps), prominence=1.0)
 
-    swing_candidates = []
+    # -- helper: measure how "swing-like" a peak's temporal shape is ----------
+    def swing_score(peak_frame):
+        """Return a float score; higher means more swing-like."""
+        half_w = int(1.5 * fps)                        # ±1.5 s analysis window
+        lo, hi = max(0, peak_frame - half_w), min(len(smoothed) - 1, peak_frame + half_w)
+        local = smoothed[lo:hi + 1]
+        pi = peak_frame - lo
+
+        if len(local) < 10:
+            return 0.0
+
+        # 1) Crest factor — how tall is the peak relative to its surroundings?
+        crest = smoothed[peak_frame] / (np.mean(local) + 1e-6)
+
+        # 2) Decay speed — sharp drop after impact? (swing = abrupt stop)
+        n_decay = min(5, len(local) - pi - 1)
+        post = local[pi + 1:pi + 1 + n_decay] if n_decay > 0 else local[pi:pi + 1]
+        decay_rate = max(0.0, (smoothed[peak_frame] - np.min(post)) / n_decay) if n_decay > 0 else 0.0
+
+        # 3) Asymmetry — rise area vs fall area (swing: fast rise, faster fall)
+        rise_area = np.trapezoid(local[:pi + 1]) if pi > 0 else 0.0
+        fall_area = np.trapezoid(local[pi:])
+        asymmetry = rise_area / (fall_area + 1e-6) if rise_area > 0 else 1.0
+
+        # 4) Isolation — how much taller than the second-biggest peak in the window?
+        sorted_vals = np.sort(local)[::-1]
+        isolation = sorted_vals[0] / (sorted_vals[1] + 1e-6) if len(sorted_vals) >= 2 else 1.0
+
+        # 5) Raw p99 speed at this frame (absolute motion)
+        raw_p99 = p99_raw[peak_frame] if peak_frame < len(p99_raw) else 0.0
+
+        # 6) Spatial concentration — did the *raw* motion score come from a few
+        #    pixels (clubhead) or many pixels (walking)?  The motion_raw array
+        #    already encodes p99*(p99/p95) which is high for localized motion.
+        #    We read the pre-smoothed value at this frame.
+        raw_motion = motion_raw[peak_frame] if peak_frame < len(motion_raw) else 0.0
+        concentration = raw_motion / (smoothed[peak_frame] + 1e-6)
+        # concentration > 1.0 means the peak was sharper before smoothing
+        # (localized), < 1.0 means smoothing amplified it (diffuse).
+
+        return (crest * 1.0
+                + decay_rate * 2.0
+                + asymmetry * 0.5
+                + isolation * 1.0
+                + raw_p99 * 0.3
+                + concentration * 3.0)
+
+    # -- score every peak and keep them sorted best-first --------------------
+    candidates = []
     for p in peaks:
         if p < 1 or p >= len(p99_raw):
             continue
-        if smoothed[p] >= max_flow * 0.70 and p99_raw[p] >= 3.2:
-            swing_candidates.append(p)
+        if p99_raw[p] < 2.0:          # hard floor: must have at least *some* motion
+            continue
+        sc = swing_score(p)
+        candidates.append((p, sc))
 
-    # Diagnostic: all qualifying peaks
-    print(f"  [Step 4] Found {len(swing_candidates)} qualifying peak(s):")
-    for p in swing_candidates:
+    print(f"  [Step 4] {len(candidates)} candidate peak(s) scored:")
+    for p, sc in sorted(candidates, key=lambda x: x[1], reverse=True):
         print(f"           frame {p:4d} ({p/fps:.2f}s)  "
-              f"smoothed={smoothed[p]:.2f}  raw_p99={p99_raw[p]:.2f} px/frame")
+              f"smoothed={smoothed[p]:.2f}  raw_p99={p99_raw[p]:.2f}  "
+              f"raw_motion={motion_raw[p]:.2f}  swing_score={sc:.2f}")
 
-    # Step 4b: Audio-assisted tie-breaking
-    AUDIO_WINDOW_SEC = 0.5
+    # -- audio booster (if enabled) -----------------------------------------
+    if use_audio_gate and audio_peaks:
+        def audio_boost(frame_idx, base_score):
+            t = frame_idx / fps
+            best_amp, best_dist = 0.0, 0.5 + 1.0
+            for t_a, amp in audio_peaks:
+                d = abs(t_a - t)
+                if d <= 0.5 and d < best_dist:
+                    best_dist, best_amp = d, amp
+            if best_amp > 0:
+                # Audio amplitude: typical strike = 50-200+, background = 2-15
+                amp_factor = best_amp / 15.0
+                # Gaussian distance penalty: σ = 0.25s
+                # at 0.0s → 1.0, at 0.25s → 0.37, at 0.5s → 0.02
+                dist_penalty = np.exp(-0.5 * (best_dist / 0.25) ** 2)
+                boost = 1.0 + amp_factor * dist_penalty
+                return base_score * boost, best_dist, best_amp
+            return base_score, 999.0, 0.0
 
-    def audio_score_for_frame(frame_idx):
-        t = frame_idx / fps
-        best_amp, best_dist = 0.0, AUDIO_WINDOW_SEC + 1.0
+        boosted = []
+        for p, sc in candidates:
+            new_sc, dist, amp = audio_boost(p, sc)
+            boosted.append((p, new_sc))
+            if amp > 0:
+                print(f"           frame {p:4d} audio boost: {sc:.2f} -> {new_sc:.2f} "
+                      f"(dist={dist:.2f}s, amp={amp:.1f})")
+        candidates = sorted(boosted, key=lambda x: x[1], reverse=True)
+
+    # Audio-first fallback: if we have strong audio onsets but no flow peak
+    # within 0.5s of them, create synthetic candidates from audio alone.
+    if use_audio_gate and audio_peaks:
         for t_a, amp in audio_peaks:
-            d = abs(t_a - t)
-            if d <= AUDIO_WINDOW_SEC and d < best_dist:
-                best_dist, best_amp = d, amp
-        return best_amp, best_dist
+            if amp < 30:  # only strong onsets (real strikes are 50+)
+                continue
+            frame_a = int(t_a * fps)
+            # Check if any existing candidate is within 0.5s of this onset
+            nearby = any(abs(p - frame_a) < int(0.5 * fps) for p, _ in candidates)
+            if not nearby and 0 <= frame_a < len(smoothed):
+                # Create synthetic candidate: score based primarily on audio
+                synthetic_score = amp * 0.5  # audio-dominant score
+                candidates.append((frame_a, synthetic_score))
+                print(f"           frame {frame_a:4d} ({t_a:.2f}s)  "
+                      f"audio-only candidate  amp={amp:.1f}  score={synthetic_score:.2f}")
+        # Sort candidates again to include any new synthetic candidates
+        candidates = sorted(candidates, key=lambda x: x[1], reverse=True)
 
-    if len(swing_candidates) == 0:
+    # -- pick the winner ----------------------------------------------------
+    if len(candidates) == 0:
         if use_audio_gate and audio_peaks:
             strongest = max(audio_peaks, key=lambda x: x[1])
-            impact_frame = int(strongest[0] * fps)
-            print(f"  [Step 4] No flow peaks — using strongest audio onset at "
+            impact_frame = int(round(strongest[0] * fps))
+            print(f"  [Step 4] No flow peaks — strongest audio onset at "
                   f"{strongest[0]:.2f}s (amp={strongest[1]:.1f})")
         else:
             impact_frame = int(np.argmax(smoothed))
             print(f"  [Step 4] No flow peaks — global argmax fallback frame {impact_frame}")
-
-    elif len(swing_candidates) == 1:
-        impact_frame = swing_candidates[0]
-        if use_audio_gate and audio_peaks:
-            amp, dist = audio_score_for_frame(impact_frame)
-            tag = f"confirmed by audio (dist={dist:.2f}s)" if amp > 0 else f"no audio match within {AUDIO_WINDOW_SEC}s"
-            print(f"  [Step 4] Single candidate — {tag}")
-
     else:
-        print(f"  [Step 4] Multiple candidates ({len(swing_candidates)}) — audio tie-breaker")
-        best_frame, best_combined = None, -1.0
-        for p in swing_candidates:
-            amp, dist = audio_score_for_frame(p)
-            if amp > 0:
-                combined = smoothed[p] * amp / (1.0 + dist * 10)
-                print(f"           frame {p:4d} ({p/fps:.2f}s)  flow={smoothed[p]:.2f}  "
-                      f"audio_amp={amp:.1f}  dist={dist:.2f}s  combined={combined:.2f}")
-                if combined > best_combined:
-                    best_combined, best_frame = combined, p
-        if best_frame is not None:
-            impact_frame = best_frame
-            print(f"  [Step 4] Selected frame {impact_frame} by audio tie-breaker")
-        else:
-            # No audio match — fall back to highest raw p99
-            best_idx = int(np.argmax([p99_raw[p] for p in swing_candidates]))
-            impact_frame = swing_candidates[best_idx]
-            print(f"  [Step 4] No audio match — using highest raw p99 frame {impact_frame}")
+        impact_frame = candidates[0][0]
+        print(f"  [Step 4] Selected frame {impact_frame} ({impact_frame/fps:.2f}s) "
+              f"with swing_score={candidates[0][1]:.2f}")
 
     impact_sec = impact_frame / fps
     print(f"  [Step 4] Impact: frame {impact_frame} ({impact_sec:.2f}s), "
